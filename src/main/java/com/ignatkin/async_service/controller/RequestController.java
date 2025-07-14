@@ -2,6 +2,7 @@ package com.ignatkin.async_service.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ignatkin.async_service.model.RequestEntity;
+import com.ignatkin.async_service.model.RequestStatus;
 import com.ignatkin.async_service.model.RequestStatusEntity;
 import com.ignatkin.async_service.repository.RequestRepository;
 import com.ignatkin.async_service.repository.RequestStatusRepository;
@@ -39,8 +40,8 @@ public class RequestController {
 
     @GetMapping("/{id}/status")
     public ResponseEntity<String> getStatus(@PathVariable Long id) {
-        String status = requestService.getCurrentStatus(id);
-        return ResponseEntity.ok(status);
+        RequestStatus status = requestService.getCurrentStatus(id);
+        return ResponseEntity.ok(status != null ? status.name() : "UNKNOWN");
     }
 
     @PatchMapping("/{id}/status")
@@ -50,12 +51,20 @@ public class RequestController {
             return ResponseEntity.notFound().build();
         }
 
+        RequestStatus enumStatus;
+        try {
+            enumStatus = RequestStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body("Unknown status: " + status);
+        }
+
+
         RequestStatusEntity newStatus = new RequestStatusEntity();
         newStatus.setRequest(requestOpt.get());
-        newStatus.setStatus(status.toUpperCase());
+        newStatus.setStatus(enumStatus);
         statusRepository.save(newStatus);
 
-        return ResponseEntity.ok("Status updated to: " + status.toUpperCase());
+        return ResponseEntity.ok("Status updated to: " + enumStatus.name());
 
     }
 }

@@ -1,7 +1,7 @@
 package com.ignatkin.async_service.model;
 
 import jakarta.persistence.*;
-
+import com.ignatkin.async_service.model.RequestStatus;
 import java.time.LocalDateTime;
 
 @Entity
@@ -17,8 +17,9 @@ public class RequestStatusEntity {
     @JoinColumn(name = "request_id", nullable = false)
     private RequestEntity request;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private String status;
+    private RequestStatus status;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -41,11 +42,11 @@ public class RequestStatusEntity {
         this.request = request;
     }
 
-    public String getStatus() {
+    public RequestStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(RequestStatus status) {
         this.status = status;
     }
 

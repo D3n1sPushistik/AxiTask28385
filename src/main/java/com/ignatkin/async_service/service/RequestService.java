@@ -2,6 +2,7 @@ package com.ignatkin.async_service.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.ignatkin.async_service.model.RequestEntity;
+import com.ignatkin.async_service.model.RequestStatus;
 import com.ignatkin.async_service.model.RequestStatusEntity;
 import com.ignatkin.async_service.repository.RequestRepository;
 import com.ignatkin.async_service.repository.RequestStatusRepository;
@@ -45,18 +46,18 @@ public class RequestService {
 
         RequestStatusEntity status = new RequestStatusEntity();
         status.setRequest(saved);
-        status.setStatus("Принят в систему");
+        status.setStatus(RequestStatus.RECEIVED);
         statusRepository.save(status);
 
         return saved.getId();
     }
 
-    public String getCurrentStatus(Long requestId) {
+    public RequestStatus getCurrentStatus(Long requestId) {
         return statusRepository.findByRequestIdOrderByCreatedAtDesc(requestId)
                 .stream()
                 .findFirst()
                 .map(RequestStatusEntity::getStatus)
-                .orElse("UNKNOWN");
+                .orElse(null);
     }
 
     @Async
@@ -64,22 +65,23 @@ public class RequestService {
 
 
         try {
-            addStatus(entity, "VALIDATING");
+            addStatus(entity, RequestStatus.VALIDATING);
             Thread.sleep(4000);
 
-            addStatus(entity, "PROCESSING");
+            addStatus(entity, RequestStatus.PROCESSING);
             Thread.sleep(4000);
 
-            addStatus(entity, "FINALIZING");
+            addStatus(entity, RequestStatus.FINALIZING);
             Thread.sleep(4000);
 
-            addStatus(entity, "DONE");
+            addStatus(entity, RequestStatus.DONE);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            addStatus(entity, "ERROR");
+            addStatus(entity, RequestStatus.ERROR);
         }
     }
-    private void addStatus(RequestEntity request, String status) {
+
+    private void addStatus(RequestEntity request, RequestStatus status) {
         RequestStatusEntity entity = new RequestStatusEntity();
         entity.setRequest(request);
         entity.setStatus(status);

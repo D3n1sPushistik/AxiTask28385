@@ -1,6 +1,7 @@
 package com.ignatkin.async_service.repository;
 
 import com.ignatkin.async_service.model.RequestEntity;
+import com.ignatkin.async_service.model.RequestStatus;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -27,5 +28,5 @@ public interface RequestRepository extends CrudRepository<RequestEntity, Long> {
               )
         )
     """)
-    List<RequestEntity> findByCurrentStatus(@Param("status") String status);
+    List<RequestEntity> findByCurrentStatus(@Param("status") RequestStatus status);
 }

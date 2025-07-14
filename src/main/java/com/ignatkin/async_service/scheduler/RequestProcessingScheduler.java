@@ -1,6 +1,7 @@
 package com.ignatkin.async_service.scheduler;
 
 import com.ignatkin.async_service.model.RequestEntity;
+import com.ignatkin.async_service.model.RequestStatus;
 import com.ignatkin.async_service.repository.RequestRepository;
 import com.ignatkin.async_service.service.RequestService;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,7 +23,7 @@ public class RequestProcessingScheduler {
 
     @Scheduled(fixedDelay = 5000)
     public void processNewRequests() {
-        List<RequestEntity> newRequests = requestRepository.findByCurrentStatus("Принят в систему");
+        List<RequestEntity> newRequests = requestRepository.findByCurrentStatus(RequestStatus.RECEIVED);
         for (RequestEntity request : newRequests) {
             requestService.processRequestAsync(request);
         }
