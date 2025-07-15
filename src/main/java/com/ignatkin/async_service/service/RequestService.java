@@ -13,11 +13,14 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Async;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
 
 
 @Service
@@ -106,21 +109,34 @@ public class RequestService {
     @Async
     public void processRequestAsync(RequestEntity entity) {
 
+        Logger logger = LoggerFactory.getLogger(RequestService.class);
+        Long requestId = entity.getId();
 
         try {
+            logger.info("Начата асинхронная обработка запроса ID={}", requestId);
+
             addStatus(entity, RequestStatus.VALIDATING);
+            logger.debug("Запрос ID={} перешёл в статус VALIDATING", requestId);
             Thread.sleep(4000);
 
             addStatus(entity, RequestStatus.PROCESSING);
+            logger.debug("Запрос ID={} перешёл в статус PROCESSING", requestId);
             Thread.sleep(4000);
 
             addStatus(entity, RequestStatus.FINALIZING);
+            logger.debug("Запрос ID={} перешёл в статус FINALIZING", requestId);
             Thread.sleep(4000);
 
             addStatus(entity, RequestStatus.DONE);
+            logger.info("Запрос ID={} успешно обработан", requestId);
+
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             addStatus(entity, RequestStatus.ERROR);
+            logger.error("Обработка запроса ID={} была прервана: {}", requestId, e.getMessage(), e);
+        } catch (Exception ex) {
+            addStatus(entity, RequestStatus.ERROR);
+            logger.error("Ошибка при обработке запроса ID={}: {}", requestId, ex.getMessage(), ex);
         }
     }
 

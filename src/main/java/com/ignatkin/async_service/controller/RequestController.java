@@ -9,13 +9,15 @@ import com.ignatkin.async_service.repository.RequestStatusRepository;
 import com.ignatkin.async_service.service.RequestService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/requests")
 public class RequestController {
 
+    private static final Logger logger = LoggerFactory.getLogger(RequestController.class);
     private final RequestService requestService;
     private final RequestRepository requestRepository;
     private final RequestStatusRepository statusRepository;
@@ -29,14 +31,11 @@ public class RequestController {
     }
 
     @PostMapping
-    public ResponseEntity<?> submitRequest(@RequestBody String requestBody) {
-        try {
-            Long requestId = requestService.submitRequest(requestBody);
-            return ResponseEntity.ok(requestId);
-        } catch (JsonProcessingException e) {
-            return ResponseEntity.badRequest().body("Invalid JSON: " + e.getMessage());
-        }
+    public ResponseEntity<?> submitRequest(@RequestBody String requestBody) throws JsonProcessingException {
+        Long requestId = requestService.submitRequest(requestBody);
+        return ResponseEntity.ok(requestId);
     }
+
 
     @GetMapping("/{id}/status")
     public ResponseEntity<String> getStatus(@PathVariable Long id) {
@@ -55,6 +54,7 @@ public class RequestController {
         try {
             enumStatus = RequestStatus.valueOf(status.toUpperCase());
         } catch (IllegalArgumentException ex) {
+            logger.error("Неверный статус '{}': {}", status, ex.getMessage());
             return ResponseEntity.badRequest().body("Unknown status: " + status);
         }
 
