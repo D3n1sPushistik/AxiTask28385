@@ -11,22 +11,23 @@ import java.util.List;
 public interface RequestRepository extends CrudRepository<RequestEntity, Long> {
 
     @Query("""
-        SELECT r FROM RequestEntity r 
-        WHERE r.payloadHash = :payloadHash AND r.id IN (
-            SELECT rs.request.id FROM RequestStatusEntity rs WHERE rs.status NOT IN ('DONE', 'ERROR')
-        )
-    """)
-    List<RequestEntity> findByPayloadHashAndNotInTerminalState(String payloadHash);
+                SELECT DISTINCT r FROM RequestEntity r
+                JOIN RequestStatusEntity rs ON rs.request = r
+                WHERE r.payloadHash = :payloadHash
+                  AND rs.status NOT IN ('DONE', 'ERROR')
+            """)
+    List<RequestEntity> findByPayloadHashAndNotInTerminalState(@Param("payloadHash") String payloadHash);
+
 
     @Query("""
-        SELECT r FROM RequestEntity r
-        WHERE EXISTS (
-            SELECT rs FROM RequestStatusEntity rs
-            WHERE rs.request = r AND rs.status = :status
-              AND rs.createdAt = (
-                  SELECT MAX(rs2.createdAt) FROM RequestStatusEntity rs2 WHERE rs2.request = r
-              )
-        )
-    """)
+                SELECT rs.request FROM RequestStatusEntity rs
+                JOIN (
+                    SELECT rs2.request.id AS requestId, MAX(rs2.createdAt) AS maxCreated
+                    FROM RequestStatusEntity rs2
+                    GROUP BY rs2.request.id
+                ) latest ON rs.request.id = latest.requestId AND rs.createdAt = latest.maxCreated
+                WHERE rs.status = :status
+            """)
     List<RequestEntity> findByCurrentStatus(@Param("status") RequestStatus status);
+
 }
